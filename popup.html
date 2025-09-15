@@ -1,35 +1,72 @@
-{
-  "manifest_version": 3,
-  "name": "Bounty Watch",
-  "description": "Find. Report. Reward. | Quickly check if a website has a bug bounty program with automatic detection and visual indicators.",
-  "version": "2.0",
-  "permissions": [
-    "activeTab", 
-    "storage", 
-    "tabs"
-  ],
-  "host_permissions": [
-    "<all_urls>"
-  ],
-  "background": {
-    "service_worker": "background.js"
-  },
-  "action": {
-    "default_popup": "popup.html",
-    "default_title": "Bounty Watch - Check for bug bounty programs",
-    "default_icon": {
-      "16": "icons/icon16.png",
-      "48": "icons/icon48.png",
-      "128": "icons/icon128.png"
-    }
-  },
-  "options_page": "settings.html",
-  "icons": {
-    "16": "icons/icon16.png",
-    "48": "icons/icon48.png",
-    "128": "icons/icon128.png"
-  },
-  "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'"
-  }
-}
+<!doctype html>
+<html lang='en'>
+<head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width,initial-scale=1'>
+    <title>Bounty Watch</title>
+    <link rel='stylesheet' href='popup.css'>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo-container">
+                <svg class="logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="shieldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#1F6FEB"/>
+                            <stop offset="100%" style="stop-color:#0EA5E9"/>
+                        </linearGradient>
+                    </defs>
+                    <path d="M50 10 L80 25 L80 50 Q80 75 50 90 Q20 75 20 50 L20 25 Z" 
+                          fill="url(#shieldGradient)" stroke="#ffffff" stroke-width="2"/>
+                    <circle cx="50" cy="45" r="15" fill="#ffffff"/>
+                    <path d="M45 45 L48 48 L55 38" stroke="#1F6FEB" stroke-width="3" 
+                          stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                </svg>
+            </div>
+            <div class="title-section">
+                <h1 class="title">Bounty Watch</h1>
+                <p class="subtitle">Finds bug bounty programs</p>
+            </div>
+            <div class="settings-container">
+                <a href="settings.html" class="settings-link" title="Settings">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                </a>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="status-section">
+                <div id="status-indicator" class="status-indicator loading">
+                    <div class="loading-spinner"></div>
+                </div>
+                <div class="status-text">
+                    <div id="status" class="status-message">Checking for bug bounty programs...</div>
+                    <div id="domain-info" class="domain-info"></div>
+                </div>
+            </div>
+
+            <div class="action-section">
+                <button id="checkBtn" class="check-button">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"></path>
+                        <path d="M9 12l2 2 4-4"></path>
+                    </svg>
+                    Check for Bug Bounty Program
+                </button>
+            </div>
+
+            <div id="results" class="results-section" style="display: none;">
+                <div class="results-header">
+                    <h3>Found Programs</h3>
+                </div>
+                <div id="details" class="program-list"></div>
+            </div>
+        </div>
+    </div>
+    <script src='popup.js'></script>
+</body>
+</html>
