@@ -1,1 +1,191 @@
-body{font-family:Inter,Segoe UI,Roboto,sans-serif;margin:0;padding:0;width:320px;background:linear-gradient(135deg,#1F6FEB,#9333EA,#0EA5E9);color:#0F172A}.header{display:flex;align-items:center;padding:10px}.logo{width:40px;height:40px;margin-right:10px}.tagline{font-size:14px;color:#475569}.controls{display:flex;align-items:center;justify-content:space-between;padding:10px}button{background:#1F6FEB;color:#fff;font-size:14px;font-weight:500;padding:10px 16px;border:none;border-radius:6px;cursor:pointer}button:hover{background:#2563EB}.status{padding:10px;font-size:13px;color:#475569}
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    margin: 0;
+    padding: 0;
+    width: 400px;
+    min-height: 500px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #ffffff;
+    overflow: hidden;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    min-height: 500px;
+    position: relative;
+}
+
+.container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    position: relative;
+    z-index: 10;
+}
+
+.logo-container {
+    flex-shrink: 0;
+}
+
+.logo {
+    width: 48px;
+    height: 48px;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.15));
+}
+
+.title-section {
+    flex: 1;
+    margin-left: 16px;
+}
+
+.title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #ffffff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 4px;
+}
+
+.subtitle {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 400;
+}
+
+.settings-container {
+    flex-shrink: 0;
+}
+
+.settings-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(10px);
+}
+
+.settings-link:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+}
+
+.content {
+    flex: 1;
+    padding: 0 24px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    position: relative;
+    z-index: 10;
+}
+
+.status-section {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 16px;
+    padding: 24px;
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-height: 80px;
+}
+
+.status-indicator {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.status-indicator.loading {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.status-indicator.success {
+    background: linear-gradient(135deg, #10B981, #059669);
+}
+
+.status-indicator.error {
+    background: linear-gradient(135deg, #EF4444, #DC2626);
+}
+
+.loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top: 2px solid #ffffff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.status-text {
+    flex: 1;
+}
+
+.status-message {
+    font-size: 16px;
+    font-weight: 500;
+    color: #ffffff;
+    margin-bottom: 4px;
+}
+
+.domain-info {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.action-section {
+    display: flex;
+    justify-content: center;
+}
+
+.check-button {
+    background: linear-gradient(135deg, #1F6FEB, #0EA5E9);
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 600;
+    padding: 16px 32px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(31, 111, 235, 0.4);
+    display: flex;
+    align-items: center;
+    gap
