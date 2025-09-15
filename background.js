@@ -1,13 +1,91 @@
 // background.js
 // Service worker / background script for Bounty Watch
 // Handles lookup of bug bounty / vulnerability disclosure programs
-// Secure, fully commented, and ready for Manifest V3
+// Enhanced with automatic checking and badge updates
 
 'use strict';
 
 // In-memory cache for decrypted API keys for the current extension runtime.
-// These are populated by the Settings page via the "unlockKeys" message and cleared via "lockKeys".
 let apiKeys = {}; // e.g., { hackerone: 'TOKEN', bugcrowd: 'TOKEN' }
+
+// Cache for domain results to avoid repeated checks
+let domainCache = new Map();
+
+// Listen for tab updates to automatically check domains
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.status === 'complete' && tab.url && tab.active) {
+    try {
+      const domain = new URL(tab.url).hostname;
+      if (domain && !domain.startsWith('chrome://') && !domain.startsWith('moz-extension://')) {
+        checkDomainAndUpdateBadge(domain, tabId);
+      }
+    } catch (error) {
+      // Invalid URL, ignore
+    }
+  }
+});
+
+// Listen for tab activation to update badge for new active tab
+chrome.tabs.onActivated.addListener((activeInfo) => {
+  chrome.tabs.get(activeInfo.tabId, (tab) => {
+    if (tab.url) {
+      try {
+        const domain = new URL(tab.url).hostname;
+        if (domain && !domain.startsWith('chrome://') && !domain.startsWith('moz-extension://')) {
+          checkDomainAndUpdateBadge(domain, activeInfo.tabId);
+        }
+      } catch (error) {
+        // Invalid URL, ignore
+      }
+    }
+  });
+});
+
+// Check domain and update badge
+async function checkDomainAndUpdateBadge(domain, tabId) {
+  try {
+    // Check cache first
+    if (domainCache.has(domain)) {
+      const cachedResult = domainCache.get(domain);
+      updateBadge(cachedResult.found, tabId);
+      return;
+    }
+
+    // Perform lookup
+    const result = await performLookup(domain);
+    
+    // Cache result for 10 minutes
+    domainCache.set(domain, { found: result.found, timestamp: Date.now() });
+    setTimeout(() => domainCache.delete(domain), 10 * 60 * 1000);
+    
+    // Update badge
+    updateBadge(result.found, tabId);
+  } catch (error) {
+    // On error, show neutral badge
+    updateBadge(false, tabId);
+  }
+}
+
+// Update extension badge
+function updateBadge(found, tabId) {
+  if (found) {
+    // Green checkmark for found programs
+    chrome.action.setBadgeText({ text: '✓', tabId });
+    chrome.action.setBadgeBackgroundColor({ color: '#10B981', tabId });
+    chrome.action.setTitle({ 
+      title: 'Bounty Watch - Bug bounty program found!',
+      tabId 
+    });
+  } else {
+    // Red X for no programs found
+    chrome.action.setBadgeText({ text: '✗', tabId });
+    chrome.action.setBadgeBackgroundColor({ color: '#EF4444', tabId });
+    chrome.action.setTitle({ 
+      title: 'Bounty Watch - No bug bounty program found',
+      tabId 
+    });
+  }
+}
 
 // Listen for messages from popup.js and settings.js
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
@@ -19,7 +97,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     return true; // Keep channel open for async response
   }
 
-  // Settings page sent decrypted keys for the session — store them in-memory only
+  // Settings page sent decrypted keys for the session
   if (msg && msg.action === 'unlockKeys') {
     apiKeys = msg.keys || {};
     sendResponse({ ok: true, message: 'API keys stored in memory for session.' });
@@ -39,9 +117,17 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 // Orchestrate lookup for active tab's domain
 async function runLookupForActiveTab() {
   try {
-    const domain = await getActiveTabDomain(); // Get current domain
+    const domain = await getActiveTabDomain();
+    return await performLookup(domain);
+  } catch (err) {
+    return { error: err.message };
+  }
+}
 
-    // Try authoritative platform APIs first when keys are available (best-effort)
+// Perform the actual lookup logic
+async function performLookup(domain) {
+  try {
+    // Try authoritative platform APIs first when keys are available
     const apiResults = [];
     if (apiKeys && apiKeys.hackerone) {
       const h = await tryHackerOneApi(domain);
@@ -52,27 +138,31 @@ async function runLookupForActiveTab() {
       if (b) apiResults.push(b);
     }
 
-    // If any API results found, return them (they are more authoritative)
+    // If any API results found, return them
     if (apiResults.length) {
-      return { message: `Programs found for ${domain} (via platform APIs)`, data: { found: true, programs: apiResults } };
+      return { 
+        message: `Programs found for ${domain} (via platform APIs)`, 
+        data: { found: true, programs: apiResults } 
+      };
     }
 
     // Fallback: run heuristics + manual programs
-    const programs = await lookupBountyPrograms(domain); // Run all other checks
+    const programs = await lookupBountyPrograms(domain);
 
     if (!programs || programs.length === 0) {
-      // No results found
-      return { message: `No program found for ${domain}`, data: { found: false } };
+      return { 
+        message: `No program found for ${domain}`, 
+        data: { found: false } 
+      };
     }
 
-    // Return results if found
     return {
       message: `Programs found for ${domain}`,
       data: { found: true, programs }
     };
 
   } catch (err) {
-    return { error: err.message };
+    throw new Error(`Lookup failed: ${err.message}`);
   }
 }
 
@@ -80,7 +170,7 @@ async function runLookupForActiveTab() {
 async function getActiveTabDomain() {
   const tabs = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
   if (!tabs || !tabs.length) throw new Error('No active tab');
-  return new URL(tabs[0].url).hostname; // Extract hostname
+  return new URL(tabs[0].url).hostname;
 }
 
 // Run heuristics to detect bounty programs
@@ -106,13 +196,10 @@ async function lookupBountyPrograms(domain) {
   return dedupePrograms(results);
 }
 
-// Try HackerOne API (best-effort). Note: endpoints and permissions vary — this attempts common endpoints.
-// If the API or CORS blocks the request, this returns null. We avoid throwing to keep UX smooth.
+// Try HackerOne API (best-effort)
 async function tryHackerOneApi(domain) {
   try {
-    // HackerOne's official API base is https://api.hackerone.com/ (see docs). We try a generic search endpoint.
-    // NOTE: exact endpoint & parameters may require adjustments depending on your HackerOne account permissions.
-    const endpoint = `https://api.hackerone.com/v1/organizations?search=${encodeURIComponent(domain)}`; // best-effort
+    const endpoint = `https://api.hackerone.com/v1/organizations?search=${encodeURIComponent(domain)}`;
     const resp = await fetch(endpoint, {
       method: 'GET',
       headers: {
@@ -121,30 +208,33 @@ async function tryHackerOneApi(domain) {
       },
       mode: 'cors'
     });
-    if (!resp || !resp.ok) {
-      // If 4xx/5xx or CORS blocked, just return null
-      return null;
-    }
+    if (!resp || !resp.ok) return null;
+    
     const json = await resp.json();
-    // Parse result - keep it conservative: if we see organizations/programs, map them
     const programs = [];
     if (Array.isArray(json.data)) {
       for (const row of json.data.slice(0, 5)) {
-        const link = row.relationships && row.relationships.programs && row.relationships.programs.links && row.relationships.programs.links.related ? row.relationships.programs.links.related : `https://hackerone.com/${row.attributes && row.attributes.handle ? row.attributes.handle : ''}`;
-        programs.push({ platform: 'HackerOne', link, scope: domain, description: row.attributes && row.attributes.summary ? row.attributes.summary : '', rewards: '' });
+        const link = row.relationships && row.relationships.programs && row.relationships.programs.links && row.relationships.programs.links.related ? 
+          row.relationships.programs.links.related : 
+          `https://hackerone.com/${row.attributes && row.attributes.handle ? row.attributes.handle : ''}`;
+        programs.push({ 
+          platform: 'HackerOne', 
+          link, 
+          scope: domain, 
+          description: row.attributes && row.attributes.summary ? row.attributes.summary : '', 
+          rewards: '' 
+        });
       }
     }
-    return programs.length ? programs[0] : null; // return primary program-like object
+    return programs.length ? programs[0] : null;
   } catch (e) {
-    // Likely CORS or network error — ignore and return null
     return null;
   }
 }
 
-// Try Bugcrowd API (best-effort). Uses Bugcrowd REST API base; endpoint may need account-level permissions.
+// Try Bugcrowd API (best-effort)
 async function tryBugcrowdApi(domain) {
   try {
-    // This is a best-effort attempt — Bugcrowd API base and query param names may vary by version.
     const endpoint = `https://api.bugcrowd.com/api/programs?query=${encodeURIComponent(domain)}`;
     const resp = await fetch(endpoint, {
       method: 'GET',
@@ -155,12 +245,20 @@ async function tryBugcrowdApi(domain) {
       mode: 'cors'
     });
     if (!resp || !resp.ok) return null;
+    
     const json = await resp.json();
-    // Parse response conservatively
     if (json && Array.isArray(json.data) && json.data.length) {
       const p = json.data[0];
-      const link = p && p.attributes && p.attributes.url ? p.attributes.url : (`https://bugcrowd.com/${p && p.attributes && p.attributes.handle ? p.attributes.handle : ''}`);
-      return { platform: 'Bugcrowd', link, scope: domain, description: p.attributes && p.attributes.description ? p.attributes.description : '', rewards: '' };
+      const link = p && p.attributes && p.attributes.url ? 
+        p.attributes.url : 
+        `https://bugcrowd.com/${p && p.attributes && p.attributes.handle ? p.attributes.handle : ''}`;
+      return { 
+        platform: 'Bugcrowd', 
+        link, 
+        scope: domain, 
+        description: p.attributes && p.attributes.description ? p.attributes.description : '', 
+        rewards: '' 
+      };
     }
     return null;
   } catch (e) {
@@ -179,7 +277,7 @@ async function fetchSecurityTxt(domain) {
       const resp = await fetch(u, { method: 'GET', mode: 'cors' });
       if (resp.ok) return await resp.text();
     } catch (e) {
-      continue; // Ignore errors and try next
+      continue;
     }
   }
   return null;
@@ -215,7 +313,7 @@ function parseHomepageForBounty(html, domain) {
   let m;
   while ((m = hrefRegex.exec(html)) !== null) {
     let link = m[1];
-    if (link.startsWith('/')) link = `https://${domain}${link}`; // Relative → absolute
+    if (link.startsWith('/')) link = `https://${domain}${link}`;
     if (/hackerone|bugcrowd|intigriti|yeswehack/i.test(link)) {
       programs.push(makeProgram('Platform', link, domain));
     }
@@ -243,7 +341,7 @@ async function probeKnownPlatformPaths(domain) {
         results.push(makeProgram('Platform', u, domain));
       }
     } catch (e) {
-      continue; // Skip failures
+      continue;
     }
   }
   return results;
@@ -265,11 +363,11 @@ async function getManualPrograms(domain) {
 // Construct program object
 function makeProgram(source, link, domain) {
   return {
-    platform: source, // Source of info
-    link, // Program link
-    scope: domain, // Target domain
-    description: '', // Reserved for enrichment
-    rewards: '' // Reserved for enrichment
+    platform: source,
+    link,
+    scope: domain,
+    description: '',
+    rewards: ''
   };
 }
 
