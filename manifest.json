@@ -1,15 +1,22 @@
 {
   "manifest_version": 3,
   "name": "Bounty Watch",
-  "description": "Find. Report. Reward. | Quickly check if a website has a bug bounty program.",
-  "version": "1.0",
-  "permissions": ["activeTab", "storage", "tabs"],
-  "host_permissions": ["<all_urls>"],
+  "description": "Find. Report. Reward. | Quickly check if a website has a bug bounty program with automatic detection and visual indicators.",
+  "version": "2.0",
+  "permissions": [
+    "activeTab", 
+    "storage", 
+    "tabs"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
   "background": {
     "service_worker": "background.js"
   },
   "action": {
     "default_popup": "popup.html",
+    "default_title": "Bounty Watch - Check for bug bounty programs",
     "default_icon": {
       "16": "icons/icon16.png",
       "48": "icons/icon48.png",
@@ -21,5 +28,8 @@
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
   }
 }
