@@ -1,1 +1,35 @@
-<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Bounty Watch</title><link rel='stylesheet' href='popup.css'></head><body><main id='app'><header class='header'><img src='icons/icon48.png' alt='logo' class='logo'><div><h1>Bounty Watch</h1><div class='tagline'>Find. Report. Reward.</div><div id='subtitle'>Finds bug bounty programs</div></div></header><div class='controls'><button id='checkBtn'>Check for Bug Bounty Program</button><a id='settingsLink' href='settings.html'>⚙️</a></div><section id='results'><div id='status'>Click the button to check the current website.</div><div id='details'></div></section></main><script src='popup.js'></script></body></html>
+{
+  "manifest_version": 3,
+  "name": "Bounty Watch",
+  "description": "Find. Report. Reward. | Quickly check if a website has a bug bounty program with automatic detection and visual indicators.",
+  "version": "2.0",
+  "permissions": [
+    "activeTab", 
+    "storage", 
+    "tabs"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Bounty Watch - Check for bug bounty programs",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "options_page": "settings.html",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
+}
