@@ -18,9 +18,4 @@ Bounty Watch is a Chrome extension that helps users quickly check if the current
 - If found, results are displayed with direct links.
 - If not found, you can add manual program links in settings.
 
-## Security
-- API keys are stored in Chrome Sync Storage.
-- No data is sent anywhere except to official program APIs.
 
-## Credits
-- Developed as part of School of AI EAG assignment.
