@@ -1,12 +1,11 @@
 // background.js
 // Service worker / background script for Bounty Watch
-// Handles lookup of bug bounty / vulnerability disclosure programs
-// Enhanced with automatic checking and badge updates
+// Fixed badge update logic and enhanced functionality
 
 'use strict';
 
-// In-memory cache for decrypted API keys for the current extension runtime.
-let apiKeys = {}; // e.g., { hackerone: 'TOKEN', bugcrowd: 'TOKEN' }
+// In-memory cache for decrypted API keys
+let apiKeys = {};
 
 // Cache for domain results to avoid repeated checks
 let domainCache = new Map();
@@ -16,11 +15,15 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === 'complete' && tab.url && tab.active) {
     try {
       const domain = new URL(tab.url).hostname;
-      if (domain && !domain.startsWith('chrome://') && !domain.startsWith('moz-extension://')) {
+      if (domain && !domain.startsWith('chrome://') && !domain.startsWith('moz-extension://') && !domain.startsWith('chrome-extension://')) {
         checkDomainAndUpdateBadge(domain, tabId);
+      } else {
+        // Clear badge for extension pages
+        chrome.action.setBadgeText({ text: '', tabId });
       }
     } catch (error) {
-      // Invalid URL, ignore
+      // Invalid URL, clear badge
+      chrome.action.setBadgeText({ text: '', tabId });
     }
   }
 });
@@ -31,11 +34,13 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
     if (tab.url) {
       try {
         const domain = new URL(tab.url).hostname;
-        if (domain && !domain.startsWith('chrome://') && !domain.startsWith('moz-extension://')) {
+        if (domain && !domain.startsWith('chrome://') && !domain.startsWith('moz-extension://') && !domain.startsWith('chrome-extension://')) {
           checkDomainAndUpdateBadge(domain, activeInfo.tabId);
+        } else {
+          chrome.action.setBadgeText({ text: '', tabId: activeInfo.tabId });
         }
       } catch (error) {
-        // Invalid URL, ignore
+        chrome.action.setBadgeText({ text: '', tabId: activeInfo.tabId });
       }
     }
   });
@@ -58,15 +63,18 @@ async function checkDomainAndUpdateBadge(domain, tabId) {
     domainCache.set(domain, { found: result.found, timestamp: Date.now() });
     setTimeout(() => domainCache.delete(domain), 10 * 60 * 1000);
     
-    // Update badge
-    updateBadge(result.found, tabId);
+    // Update badge - FIXED: Check if programs were actually found
+    const hasPrograms = result.data && result.data.found && result.data.programs && result.data.programs.length > 0;
+    updateBadge(hasPrograms, tabId);
+    
   } catch (error) {
-    // On error, show neutral badge
+    console.error('Error checking domain:', error);
+    // On error, show red X
     updateBadge(false, tabId);
   }
 }
 
-// Update extension badge
+// Update extension badge - FIXED LOGIC
 function updateBadge(found, tabId) {
   if (found) {
     // Green checkmark for found programs
@@ -124,7 +132,7 @@ async function runLookupForActiveTab() {
   }
 }
 
-// Perform the actual lookup logic
+// Perform the actual lookup logic - FIXED RETURN FORMAT
 async function performLookup(domain) {
   try {
     // Try authoritative platform APIs first when keys are available
@@ -142,7 +150,8 @@ async function performLookup(domain) {
     if (apiResults.length) {
       return { 
         message: `Programs found for ${domain} (via platform APIs)`, 
-        data: { found: true, programs: apiResults } 
+        data: { found: true, programs: apiResults },
+        found: true  // ADDED: Direct found flag for badge logic
       };
     }
 
@@ -152,13 +161,15 @@ async function performLookup(domain) {
     if (!programs || programs.length === 0) {
       return { 
         message: `No program found for ${domain}`, 
-        data: { found: false } 
+        data: { found: false },
+        found: false  // ADDED: Direct found flag for badge logic
       };
     }
 
     return {
       message: `Programs found for ${domain}`,
-      data: { found: true, programs }
+      data: { found: true, programs },
+      found: true  // ADDED: Direct found flag for badge logic
     };
 
   } catch (err) {
@@ -177,21 +188,25 @@ async function getActiveTabDomain() {
 async function lookupBountyPrograms(domain) {
   const results = [];
 
-  // 1. Check security.txt
-  const secTxt = await fetchSecurityTxt(domain);
-  if (secTxt) results.push(...parseSecurityTxt(secTxt, domain));
+  try {
+    // 1. Check security.txt
+    const secTxt = await fetchSecurityTxt(domain);
+    if (secTxt) results.push(...parseSecurityTxt(secTxt, domain));
 
-  // 2. Parse homepage
-  const homepageHtml = await fetchHtml(domain);
-  if (homepageHtml) results.push(...parseHomepageForBounty(homepageHtml, domain));
+    // 2. Parse homepage
+    const homepageHtml = await fetchHtml(domain);
+    if (homepageHtml) results.push(...parseHomepageForBounty(homepageHtml, domain));
 
-  // 3. Probe known bounty platforms
-  const platformDirect = await probeKnownPlatformPaths(domain);
-  results.push(...platformDirect);
+    // 3. Probe known bounty platforms
+    const platformDirect = await probeKnownPlatformPaths(domain);
+    results.push(...platformDirect);
 
-  // 4. Include user-defined manual programs from storage
-  const manualPrograms = await getManualPrograms(domain);
-  results.push(...manualPrograms);
+    // 4. Include user-defined manual programs from storage
+    const manualPrograms = await getManualPrograms(domain);
+    results.push(...manualPrograms);
+  } catch (error) {
+    console.error('Error in lookupBountyPrograms:', error);
+  }
 
   return dedupePrograms(results);
 }
@@ -384,5 +399,3 @@ function dedupePrograms(list) {
   }
   return Array.from(map.values());
 }
-
-// End of background.js
