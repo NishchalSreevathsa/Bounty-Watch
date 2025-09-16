@@ -3,6 +3,7 @@
   "name": "Bounty Watch",
   "description": "Find. Report. Reward. | Quickly check if a website has a bug bounty program with automatic detection and visual indicators.",
   "version": "2.0",
+  "author": "Your Name",
   "permissions": [
     "activeTab", 
     "storage", 
@@ -12,7 +13,8 @@
     "<all_urls>"
   ],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
   },
   "action": {
     "default_popup": "popup.html",
@@ -31,5 +33,11 @@
   },
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'"
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["icons/*.png"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }
