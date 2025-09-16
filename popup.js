@@ -1,4 +1,4 @@
-// popup.js - Enhanced UI with automatic loading and status updates
+// popup.js - Enhanced with suggestions and API features
 
 let currentDomain = '';
 
@@ -46,6 +46,7 @@ function handleManualCheck() {
     
     updateUI('loading', 'Checking for bug bounty programs...', '');
     hideResults();
+    hideSuggestions();
     
     chrome.runtime.sendMessage({ action: 'runLookup' }, (response) => {
         button.disabled = false;
@@ -63,6 +64,7 @@ function handleManualCheck() {
 function handleLookupResponse(response) {
     if (response.error) {
         updateUI('error', 'Error occurred', response.error);
+        showSuggestions();
         return;
     }
 
@@ -70,9 +72,15 @@ function handleLookupResponse(response) {
         // Programs found
         updateUI('success', 'Bug bounty programs found!', `Found ${response.data.programs.length} program(s) for ${currentDomain}`);
         displayResults(response.data.programs);
+        hideSuggestions();
+        
+        // Check if we have API keys and can fetch trending programs
+        checkForTrendingPrograms();
     } else {
         // No programs found
         updateUI('error', 'No bug bounty program found', `${currentDomain} doesn't appear to have a public bug bounty program`);
+        hideResults();
+        showSuggestions();
     }
 }
 
@@ -136,9 +144,117 @@ function displayResults(programs) {
     }
 }
 
+// Show suggestions when no programs found
+function showSuggestions() {
+    let suggestionsSection = document.getElementById('suggestions');
+    
+    if (!suggestionsSection) {
+        // Create suggestions section
+        suggestionsSection = document.createElement('div');
+        suggestionsSection.id = 'suggestions';
+        suggestionsSection.className = 'suggestions-section';
+        suggestionsSection.innerHTML = `
+            <div class="suggestions-header">
+                <h3>Explore Bug Bounty Platforms</h3>
+                <div class="suggestions-subtitle">Discover active programs on popular platforms</div>
+            </div>
+            <div class="suggestion-list">
+                <a href="https://hackerone.com/programs" target="_blank" class="suggestion-item">
+                    <div class="suggestion-icon">H1</div>
+                    <div class="suggestion-content">
+                        <div class="suggestion-title">HackerOne</div>
+                        <div class="suggestion-desc">World's largest bug bounty platform</div>
+                    </div>
+                </a>
+                <a href="https://bugcrowd.com/programs" target="_blank" class="suggestion-item">
+                    <div class="suggestion-icon">BC</div>
+                    <div class="suggestion-content">
+                        <div class="suggestion-title">Bugcrowd</div>
+                        <div class="suggestion-desc">Crowdsourced security platform</div>
+                    </div>
+                </a>
+                <a href="https://intigriti.com/programs" target="_blank" class="suggestion-item">
+                    <div class="suggestion-icon">IN</div>
+                    <div class="suggestion-content">
+                        <div class="suggestion-title">Intigriti</div>
+                        <div class="suggestion-desc">European bug bounty platform</div>
+                    </div>
+                </a>
+                <a href="https://yeswehack.com/programs" target="_blank" class="suggestion-item">
+                    <div class="suggestion-icon">YW</div>
+                    <div class="suggestion-content">
+                        <div class="suggestion-title">YesWeHack</div>
+                        <div class="suggestion-desc">Global ethical hacking platform</div>
+                    </div>
+                </a>
+            </div>
+        `;
+        
+        // Insert after results section or at the end of content
+        const content = document.querySelector('.content');
+        content.appendChild(suggestionsSection);
+    }
+    
+    suggestionsSection.style.display = 'block';
+}
+
+// Hide suggestions
+function hideSuggestions() {
+    const suggestionsSection = document.getElementById('suggestions');
+    if (suggestionsSection) {
+        suggestionsSection.style.display = 'none';
+    }
+}
+
 // Hide results section
 function hideResults() {
     document.getElementById('results').style.display = 'none';
+}
+
+// Check for trending programs (API feature)
+async function checkForTrendingPrograms() {
+    try {
+        // Check if we have API keys
+        chrome.storage.sync.get(['h1', 'bc'], (result) => {
+            if (result.h1 || result.bc) {
+                // We have API keys, could add trending programs section
+                addTrendingProgramsSection();
+            }
+        });
+    } catch (error) {
+        console.error('Error checking for API keys:', error);
+    }
+}
+
+// Add trending programs section (future feature)
+function addTrendingProgramsSection() {
+    let trendingSection = document.getElementById('trending-programs');
+    
+    if (!trendingSection) {
+        trendingSection = document.createElement('div');
+        trendingSection.id = 'trending-programs';
+        trendingSection.className = 'suggestions-section';
+        trendingSection.innerHTML = `
+            <div class="suggestions-header">
+                <h3>🔥 Trending Programs</h3>
+                <div class="suggestions-subtitle">Popular bug bounty programs right now</div>
+            </div>
+            <div class="suggestion-list">
+                <div class="suggestion-item" style="opacity: 0.7;">
+                    <div class="suggestion-icon">🚀</div>
+                    <div class="suggestion-content">
+                        <div class="suggestion-title">API Integration Coming Soon</div>
+                        <div class="suggestion-desc">Live trending programs from HackerOne & Bugcrowd</div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        const content = document.querySelector('.content');
+        content.appendChild(trendingSection);
+    }
+    
+    trendingSection.style.display = 'block';
 }
 
 // Utility function to escape HTML
