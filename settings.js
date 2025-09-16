@@ -8,6 +8,17 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('saveBtn').addEventListener('click', saveApiKeys);
     document.getElementById('addProgram').addEventListener('click', addManualProgram);
     
+    // Back button functionality
+    document.getElementById('backBtn').addEventListener('click', (e) => {
+        e.preventDefault();
+        // Try to go back to popup, fallback to closing window
+        if (window.history.length > 1) {
+            window.history.back();
+        } else {
+            window.close();
+        }
+    });
+    
     // Enter key handling
     document.getElementById('domain').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') addManualProgram();
@@ -29,7 +40,7 @@ function loadSettings() {
     });
 }
 
-// Save API keys
+// Save API keys with enhanced UI feedback
 function saveApiKeys() {
     const h1Key = document.getElementById('h1key').value.trim();
     const bcKey = document.getElementById('bcKey').value.trim();
@@ -40,7 +51,7 @@ function saveApiKeys() {
     // Show loading state
     saveBtn.innerHTML = `
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"></path>
+            <circle cx="12" cy="12" r="10"></circle>
             <path d="M9 12l2 2 4-4"></path>
         </svg>
         Saving...
@@ -52,26 +63,32 @@ function saveApiKeys() {
         bc: bcKey
     }, () => {
         // Reset button
-        saveBtn.innerHTML = originalText;
-        saveBtn.disabled = false;
-        
-        // Show success message
-        showMessage('saveMessage', 'API keys saved successfully!');
-        
-        // Send keys to background script if they exist
-        if (h1Key || bcKey) {
-            chrome.runtime.sendMessage({
-                action: 'unlockKeys',
-                keys: {
-                    hackerone: h1Key || null,
-                    bugcrowd: bcKey || null
-                }
-            });
-        }
+        setTimeout(() => {
+            saveBtn.innerHTML = originalText;
+            saveBtn.disabled = false;
+            
+            // Show success message
+            showMessage('saveMessage', 'API keys saved successfully!');
+            
+            // Send keys to background script if they exist
+            if (h1Key || bcKey) {
+                chrome.runtime.sendMessage({
+                    action: 'unlockKeys',
+                    keys: {
+                        hackerone: h1Key || null,
+                        bugcrowd: bcKey || null
+                    }
+                }, (response) => {
+                    if (response && response.ok) {
+                        console.log('API keys sent to background script');
+                    }
+                });
+            }
+        }, 500); // Small delay to show the loading state
     });
 }
 
-// Add manual program
+// Add manual program with enhanced validation
 function addManualProgram() {
     const domainInput = document.getElementById('domain');
     const urlInput = document.getElementById('url');
@@ -79,7 +96,7 @@ function addManualProgram() {
     const url = urlInput.value.trim();
     
     if (!domain || !url) {
-        alert('Please enter both domain and URL');
+        showMessage('saveMessage', 'Please enter both domain and URL', 'error');
         return;
     }
     
@@ -87,7 +104,7 @@ function addManualProgram() {
     try {
         new URL(url);
     } catch (e) {
-        alert('Please enter a valid URL');
+        showMessage('saveMessage', 'Please enter a valid URL', 'error');
         return;
     }
     
@@ -100,7 +117,7 @@ function addManualProgram() {
         // Check for duplicates
         const exists = programs.some(p => p.domain === cleanDomain && p.url === url);
         if (exists) {
-            alert('This program already exists');
+            showMessage('saveMessage', 'This program already exists', 'error');
             return;
         }
         
@@ -114,7 +131,7 @@ function addManualProgram() {
             domainInput.value = '';
             urlInput.value = '';
             loadManualPrograms();
-            showMessage('saveMessage', 'Manual program added successfully!');
+            showMessage('saveMessage', 'Manual program added successfully!', 'success');
         });
     });
 }
@@ -126,7 +143,7 @@ function loadManualPrograms() {
         const programList = document.getElementById('programList');
         
         if (programs.length === 0) {
-            programList.innerHTML = '<li style="text-align: center; color: #666; padding: 20px;">No manual programs added yet</li>';
+            programList.innerHTML = '<li style="text-align: center; color: #666; padding: 20px; font-style: italic;">No manual programs added yet</li>';
             return;
         }
         
@@ -139,16 +156,20 @@ function loadManualPrograms() {
                         <a href="${escapeHtml(program.url)}" target="_blank" class="program-url">
                             ${escapeHtml(program.url)}
                         </a>
+                        ${program.dateAdded ? `<div style="font-size: 11px; color: #888; margin-top: 4px;">Added: ${new Date(program.dateAdded).toLocaleDateString()}</div>` : ''}
                     </div>
-                    <button class="delete-btn" onclick="deleteProgram(${index})">
-                        Delete
+                    <button class="delete-btn" onclick="deleteProgram(${index})" title="Delete this program">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="3,6 5,6 21,6"></polyline>
+                            <path d="M19,6v14a2,2 0,0,1-2,2H7a2,2,0,0,1-2-2V6m3,0V4a2,2,0,0,1,2-2h4a2,2,0,0,1,2,2v2"></path>
+                        </svg>
                     </button>
                 </li>
             `).join('');
     });
 }
 
-// Delete manual program
+// Delete manual program with confirmation
 function deleteProgram(index) {
     if (!confirm('Are you sure you want to delete this program?')) {
         return;
@@ -156,24 +177,32 @@ function deleteProgram(index) {
     
     chrome.storage.sync.get(['manualPrograms'], (result) => {
         const programs = result.manualPrograms || [];
+        const deletedProgram = programs[index];
         programs.splice(index, 1);
         
         chrome.storage.sync.set({ manualPrograms: programs }, () => {
             loadManualPrograms();
-            showMessage('saveMessage', 'Program deleted successfully!');
+            showMessage('saveMessage', `Program for ${deletedProgram.domain} deleted successfully!`, 'success');
         });
     });
 }
 
-// Show success message
-function showMessage(elementId, message) {
+// Enhanced show success/error message
+function showMessage(elementId, message, type = 'success') {
     const messageEl = document.getElementById(elementId);
     messageEl.textContent = message;
     messageEl.style.display = 'block';
     
+    // Change color based on type
+    if (type === 'error') {
+        messageEl.style.background = '#EF4444';
+    } else {
+        messageEl.style.background = '#10B981';
+    }
+    
     setTimeout(() => {
         messageEl.style.display = 'none';
-    }, 3000);
+    }, 4000);
 }
 
 // Utility function to escape HTML
