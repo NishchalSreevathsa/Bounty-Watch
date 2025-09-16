@@ -13,7 +13,7 @@
         
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 50%, #EC4899 100%);
             min-height: 100vh;
             color: #333;
             padding: 20px;
@@ -27,11 +27,38 @@
             border-radius: 20px;
             padding: 32px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(31, 111, 235, 0.1);
+            border: 1px solid rgba(31, 111, 235, 0.2);
+            color: #1F6FEB;
+            padding: 8px 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .back-button:hover {
+            background: rgba(31, 111, 235, 0.15);
+            transform: translateX(-2px);
+            text-decoration: none;
+            color: #1F6FEB;
         }
         
         .header {
             text-align: center;
             margin-bottom: 32px;
+            padding-top: 20px;
         }
         
         .header h1 {
@@ -193,10 +220,50 @@
             margin-top: 16px;
             display: none;
         }
+        
+        .api-info {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .api-info h4 {
+            color: #1F6FEB;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .api-info p {
+            color: #666;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        
+        .feature-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #10B981, #059669);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-left: 8px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        <a href="javascript:history.back()" class="back-button" id="backBtn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 12H5"></path>
+                <polyline points="12,19 5,12 12,5"></polyline>
+            </svg>
+            Back
+        </a>
+        
         <div class="header">
             <h1>Bounty Watch Settings</h1>
             <p>Configure API keys and manual programs</p>
@@ -210,14 +277,21 @@
                     <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                 </svg>
                 API Keys
+                <span class="feature-badge">Enhanced Detection</span>
             </h2>
+            
+            <div class="api-info">
+                <h4>🚀 Why Use API Keys?</h4>
+                <p>API keys provide access to official platform data, giving you more accurate and up-to-date information about bug bounty programs. Without API keys, the extension uses heuristic detection methods.</p>
+            </div>
+            
             <div class="form-group">
                 <label for="h1key">HackerOne API Key:</label>
-                <input type="password" id="h1key" placeholder="Enter your HackerOne API key">
+                <input type="password" id="h1key" placeholder="Enter your HackerOne API key (optional)">
             </div>
             <div class="form-group">
                 <label for="bcKey">Bugcrowd API Key:</label>
-                <input type="password" id="bcKey" placeholder="Enter your Bugcrowd API key">
+                <input type="password" id="bcKey" placeholder="Enter your Bugcrowd API key (optional)">
             </div>
             <button id="saveBtn" class="button">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -228,6 +302,12 @@
                 Save Keys
             </button>
             <div id="saveMessage" class="success-message">API keys saved successfully!</div>
+            
+            <div style="margin-top: 16px; font-size: 12px; color: #666;">
+                <strong>How to get API keys:</strong><br>
+                • <a href="https://hackerone.com/settings/api_token" target="_blank" style="color: #1F6FEB;">HackerOne API Tokens</a><br>
+                • <a href="https://bugcrowd.com/user/api_access" target="_blank" style="color: #1F6FEB;">Bugcrowd API Access</a>
+            </div>
         </div>
         
         <div class="section">
@@ -239,7 +319,7 @@
                 Manual Programs
             </h2>
             <p style="color: #666; margin-bottom: 16px; font-size: 14px;">
-                Add bug bounty programs manually for specific domains
+                Add bug bounty programs manually for specific domains that aren't automatically detected
             </p>
             <div class="add-program">
                 <div class="form-group">
@@ -259,6 +339,29 @@
                 </button>
             </div>
             <ul id="programList" class="program-list"></ul>
+        </div>
+        
+        <div class="section">
+            <h2>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M9 12l2 2 4-4"></path>
+                </svg>
+                About API Integration
+            </h2>
+            <div style="color: #666; line-height: 1.6;">
+                <p style="margin-bottom: 12px;">
+                    <strong>Current Status:</strong> The API integration feature is <em>recommended but optional</em>. Here's why:
+                </p>
+                <ul style="margin: 16px 0; padding-left: 20px;">
+                    <li style="margin-bottom: 8px;"><strong>Enhanced Accuracy:</strong> Official API data provides the most up-to-date program information</li>
+                    <li style="margin-bottom: 8px;"><strong>Better Performance:</strong> Direct API access is faster than web scraping</li>
+                    <li style="margin-bottom: 8px;"><strong>Future Features:</strong> Trending programs, reward information, and program statistics</li>
+                </ul>
+                <p style="font-size: 13px; color: #888; margin-top: 16px;">
+                    <strong>Note:</strong> The extension works perfectly without API keys using heuristic detection, security.txt parsing, and manual programs.
+                </p>
+            </div>
         </div>
     </div>
     <script src='settings.js'></script>
