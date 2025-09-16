@@ -1,195 +1,245 @@
-# Bounty Watch
+# 🛡️ Bounty Watch - Chrome Extension
 
-Bounty Watch is a Chrome extension that helps users quickly check if the current website offers a bug bounty or vulnerability disclosure program.
+> **Find. Report. Reward.** | Automatically detect bug bounty programs on any website with visual indicators and direct links.
 
-## Features
-- Detects programs on HackerOne, Bugcrowd, Intigriti, YesWeHack, or via `security.txt`.
-- Allows manual program links to be added per domain.
-- Secure storage of API keys.
-- Minimal, clean UI.
+![Version](https://img.shields.io/badge/version-2.0-blue) ![Platform](https://img.shields.io/badge/platform-Chrome-green) ![License](https://img.shields.io/badge/license-MIT-yellow)
 
-## Installation
-1. Download or clone this repo.
-2. Open Chrome → Extensions → Enable Developer Mode → Load unpacked.
-3. Select the project folder.
+## 📖 Overview
 
-## Usage
-- Click the extension icon → **Check for Bug Bounty Program**.
-- If found, results are displayed with direct links.
-- If not found, you can add manual program links in settings.
+Bounty Watch is a Chrome extension that automatically detects bug bounty and vulnerability disclosure programs on websites you visit. It provides real-time visual indicators and gives you instant access to program information without any manual setup or configuration.
 
-# Bounty Watch v2.0
+### 🎯 Key Features
 
-Bounty Watch is a Chrome extension that helps users quickly check if the current website offers a bug bounty or vulnerability disclosure program with automatic detection and visual indicators.
+- **🔄 Automatic Detection**: Instantly checks websites as you browse
+- **🎯 Visual Badge Indicators**: Shows ✓ (programs found) or ✗ (no programs) on extension icon
+- **🔍 Multiple Detection Methods**: Uses security.txt, homepage analysis, and platform probing
+- **🌟 Platform Suggestions**: Recommends popular bug bounty platforms when no programs found
+- **⚡ Zero Configuration**: Works immediately after installation
+- **🎨 Modern UI**: Beautiful, professional interface with smooth animations
 
-![Bounty Watch Extension](https://img.shields.io/badge/version-2.0-blue) ![Chrome Extension](https://img.shields.io/badge/platform-Chrome-green)
+## 🚀 Installation Guide
 
-## ✨ Features
+### Method 1: Install from Source (Recommended)
 
-### 🔄 **Automatic Detection**
-- **Auto-runs on page load** - Extension automatically checks for bounty programs when you visit a website
-- **Smart badge indicators**:
-  - ✓ Green checkmark for sites with bug bounty programs
-  - ✗ Red X for sites without programs
-- **Intelligent caching** - Results cached for 10 minutes to avoid repeated API calls
+#### Step 1: Download the Extension
+1. **Download** all extension files to your computer
+2. **Create** a new folder called `bounty-watch-extension`
+3. **Copy** all the files into this folder:
+   ```
+   bounty-watch-extension/
+   ├── manifest.json
+   ├── background.js
+   ├── popup.html
+   ├── popup.css
+   ├── popup.js
+   ├── README.md
+   └── icons/
+       ├── icon16.png
+       ├── icon48.png
+       └── icon128.png
+   ```
 
-### 🎨 **Modern UI**
-- **Professional design** with glassmorphism effects and gradients
-- **Responsive layout** optimized for 400x500px popup window
-- **Smooth animations** and loading states
-- **Industry-standard sizing** for better usability
+#### Step 2: Create Icon Files
+You need to create three icon files. Choose one of these methods:
 
-### 🔍 **Detection Methods**
-- **Platform APIs**: HackerOne, Bugcrowd (with API keys)
-- **security.txt** parsing
-- **Homepage analysis** for bounty keywords and links
-- **Known platform probing**: HackerOne, Bugcrowd, Intigriti, YesWeHack
-- **Manual program management** for custom entries
+**Option A: Use the Icon Generator**
+1. Use the provided Icon Generator HTML file
+2. Click "Download" buttons to get all three sizes
+3. Save as `icon16.png`, `icon48.png`, and `icon128.png` in the `icons/` folder
 
-### ⚙️ **Advanced Features**
-- **Secure API key storage** in Chrome Sync Storage
-- **Manual program database** with domain-specific entries
-- **Real-time status updates** and error handling
-- **Background monitoring** as you browse
+**Option B: Create Simple Icons**
+1. Create three blue squares in any image editor:
+   - 16×16 pixels → save as `icon16.png`
+   - 48×48 pixels → save as `icon48.png`
+   - 128×128 pixels → save as `icon128.png`
+2. Place them in the `icons/` folder
 
-## 📦 Installation
+#### Step 3: Install in Chrome
+1. **Open Chrome** and navigate to `chrome://extensions/`
+2. **Enable "Developer mode"** (toggle switch in top-right corner)
+3. **Click "Load unpacked"**
+4. **Select** your `bounty-watch-extension` folder
+5. **Done!** The extension is now installed and active
 
-### From Source
-1. Download or clone this repository
-2. Create the required icon files (see Icon Setup below)
-3. Open Chrome and navigate to `chrome://extensions/`
-4. Enable "Developer mode" (toggle in top right)
-5. Click "Load unpacked" and select the project folder
-6. The extension should now be installed and working!
+### Method 2: Quick Test Installation
+```bash
+# If you have the files in a ZIP
+1. Extract the ZIP file
+2. Follow Step 2 and 3 from Method 1
+```
 
-### Icon Setup
-Create PNG icon files in the `icons/` folder:
-- `icon16.png` (16x16 pixels)
-- `icon48.png` (48x48 pixels) 
-- `icon128.png` (128x128 pixels)
+## 📱 How to Use
 
-Use the included SVG template or create simple blue squares for testing.
+### 🔄 Automatic Detection
+The extension works automatically in the background:
 
-## 🚀 Usage
+1. **Browse normally** - Visit any website
+2. **Check the badge** - Look at the extension icon in your toolbar:
+   - **✓ Green badge** = Bug bounty program found
+   - **✗ Red badge** = No program found
+3. **Click for details** - Click the extension icon to see full results
 
-### Automatic Detection
-- **Browse normally** - The extension automatically checks each website you visit
-- **Check the badge** - Look for ✓ (programs found) or ✗ (no programs) on the extension icon
-- **Click for details** - Open the popup to see detailed results and program links
+### 🔍 Viewing Results
 
-### Manual Checking
-- Click the extension icon to open the popup
-- Click "Check for Bug Bounty Program" to run a manual check
-- View results with direct links to bug bounty programs
+#### When Programs Are Found:
+- **Status**: Shows "Bug bounty programs found!" with green checkmark
+- **Program List**: Displays all found programs with:
+  - **Platform**: Source of the program (Security.txt, Website, Platform, etc.)
+  - **Direct Link**: Clickable link to the bug bounty program
 
-### API Configuration
-1. Open the extension popup and click the settings gear icon
-2. Enter your API keys:
-   - **HackerOne API Key**: Get from your HackerOne account settings
-   - **Bugcrowd API Key**: Get from your Bugcrowd account settings
-3. Click "Save Keys" to store them securely
+#### When No Programs Found:
+- **Status**: Shows "No bug bounty program found" with red X
+- **Suggestions**: Lists popular bug bounty platforms:
+  - **HackerOne** - World's largest bug bounty platform
+  - **Bugcrowd** - Crowdsourced security platform  
+  - **Intigriti** - European bug bounty platform
+  - **YesWeHack** - Global ethical hacking platform
 
-### Manual Programs
-1. Go to Settings → Manual Programs
-2. Enter the domain (e.g., `example.com`) and program URL
-3. Click "Add Program" to save
-4. Programs will be automatically detected for matching domains
+## 🔧 How It Works
 
-## 🔧 Configuration
+### Detection Methods
 
-### API Keys (Optional)
-For enhanced detection, configure API keys from major platforms:
+The extension uses multiple sophisticated methods to find bug bounty programs:
 
-- **HackerOne**: Account Settings → API Tokens
-- **Bugcrowd**: Profile → API Tokens
+#### 1. 🔒 Security.txt Parsing
+- Checks for `/.well-known/security.txt` and `/security.txt`
+- Parses RFC 9116 compliant security contact information
+- Extracts bug bounty program URLs from security policies
 
-API keys are stored securely in Chrome's sync storage and only used for program lookups.
+#### 2. 🏠 Homepage Analysis  
+- Scans website homepage for bug bounty keywords
+- Looks for terms: "bug bounty", "responsible disclosure", "vulnerability"
+- Detects links to known bounty platforms (HackerOne, Bugcrowd, etc.)
 
-### Manual Programs
-Add custom programs for domains not automatically detected:
-1. Domain: The website domain (without www or protocol)
-2. Program URL: Direct link to the bug bounty program page
+#### 3. 🌐 Platform Probing
+- Tests direct URLs on major platforms:
+  - `https://hackerone.com/{domain}`
+  - `https://bugcrowd.com/{domain}`
+  - `https://yeswehack.com/programs/{domain}`
+  - `https://intigriti.com/bug-bounty/{domain}`
 
-## 🛠️ Technical Details
+#### 4. ⚡ Smart Caching
+- **Caches results** for 10 minutes to improve performance
+- **Automatic cleanup** prevents memory leaks
+- **Instant responses** for recently checked domains
 
-### Architecture
-- **Manifest V3** service worker for background processing
-- **Automatic tab monitoring** with intelligent caching
-- **Badge updates** based on detection results
-- **Modern popup UI** with real-time status updates
+### Technical Architecture
 
-### Detection Methods Priority
-1. **API Results** (when keys are configured) - Most authoritative
-2. **security.txt** parsing - RFC 9116 compliant
-3. **Homepage analysis** - Keyword and link detection
-4. **Platform probing** - Direct checks on known platforms
-5. **Manual programs** - User-defined entries
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Content Tab   │ -> │  Background.js   │ -> │   Badge Update  │
+│   (Website)     │    │  (Detection)     │    │   (✓ or ✗)      │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+                                │
+                                ▼
+                       ┌──────────────────┐
+                       │   Popup.js       │
+                       │   (Show Results) │
+                       └──────────────────┘
+```
 
-### Caching Strategy
-- Results cached for **10 minutes** per domain
-- Automatic cache cleanup to prevent memory leaks
-- Background checks run only when cache expires
+## 🎨 User Interface
 
-## 🔒 Security & Privacy
+### Main Popup Window
+- **Header**: Logo, title "Bounty Watch", and subtitle
+- **Status Section**: Real-time status with loading/success/error indicators
+- **Results Section**: Found programs with platform names and clickable links
+- **Suggestions Section**: Popular platforms when no programs found
 
-- **No data collection** - All processing happens locally
-- **Secure API key storage** - Uses Chrome's built-in sync storage
-- **CORS-compliant requests** - All external calls follow security policies
-- **No tracking or analytics** - Pure functionality focus
+### Visual Design
+- **Modern Gradient Background**: Purple to pink gradient with glassmorphism effects
+- **Professional Typography**: Clean, readable fonts with proper contrast
+- **Smooth Animations**: Loading spinners, hover effects, and transitions
+- **Responsive Layout**: Adapts to different content lengths
 
-## 📊 Version History
+## 🛠️ Development
 
-### v2.0 (Current)
-- ✅ Automatic detection on page load
-- ✅ Visual badge indicators (✓/✗)
-- ✅ Modern UI with glassmorphism design
-- ✅ Industry-standard window sizing (400x500px)
-- ✅ Enhanced error handling and user feedback
-- ✅ Improved settings page with better UX
-- ✅ Smart caching system
-- ✅ Background monitoring
+### File Structure Explained
 
-### v1.0
-- ✅ Manual checking via popup
-- ✅ Basic heuristic detection
-- ✅ Simple UI
+```
+bounty-watch-extension/
+├── manifest.json          # Extension configuration & permissions
+├── background.js          # Service worker for automatic detection
+├── popup.html            # Main UI structure
+├── popup.css             # Styling and animations  
+├── popup.js              # UI logic and user interactions
+├── README.md             # This documentation
+└── icons/                # Extension icons (16px, 48px, 128px)
+    ├── icon16.png
+    ├── icon48.png
+    └── icon128.png
+```
 
-## 🤝 Contributing
+### Key Components
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+#### manifest.json
+- **Manifest V3** compliant
+- **Permissions**: `activeTab`, `storage`, `tabs`, `<all_urls>`
+- **Background**: Service worker registration
+- **Action**: Popup configuration
 
-## 📝 License
+#### background.js  
+- **Tab Monitoring**: Listens for tab updates and activations
+- **Detection Logic**: Implements all detection methods
+- **Badge Management**: Updates extension icon badges
+- **Caching System**: Manages result caching for performance
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+#### popup.js
+- **UI Updates**: Handles status indicators and results display
+- **Message Passing**: Communicates with background script
+- **Suggestions**: Shows platform recommendations
+- **Error Handling**: Manages connection and detection errors
 
-## 🐛 Known Issues
+### Performance Optimizations
 
-- Some corporate networks may block external API requests
-- CORS policies may prevent checking certain websites
-- API rate limits may apply for platform integrations
+- ⚡ **Smart Caching**: 10-minute cache prevents repeated checks
+- 🔄 **Async Operations**: Non-blocking detection methods
+- 📦 **Minimal Bundle**: No external dependencies
+- 🎯 **Efficient DOM**: Minimal DOM manipulation
+
+## 🔒 Privacy & Security
+
+### Data Handling
+- **❌ No Data Collection**: Extension doesn't collect or store personal data
+- **🏠 Local Processing**: All detection happens locally in your browser
+- **🔒 Secure Requests**: Uses CORS-compliant requests for security
+- **⚡ Temporary Cache**: Results cached locally for 10 minutes only
+
+### Permissions Explained
+- **`activeTab`**: Access current tab's URL for detection
+- **`storage`**: Local caching of results (no personal data)
+- **`tabs`**: Monitor tab changes for automatic detection
+- **`<all_urls>`**: Check security.txt and homepage content
+
+### Security Features
+- **Content Security Policy**: Prevents code injection
+- **CORS Compliance**: Secure cross-origin requests
+- **No External Scripts**: All code runs locally
+- **Input Sanitization**: All user-facing content is properly escaped
+
+
+## 🙏 Acknowledgments
+
+- **Security Research Community**: For inspiration and feedback
+- **Chrome Extension Team**: For excellent documentation and APIs
+- **Bug Bounty Platforms**: HackerOne, Bugcrowd, Intigriti, YesWeHack for their APIs and community
 
 ## 📞 Support
 
-If you encounter issues:
-1. Check that you have the latest version
-2. Verify your API keys are correctly configured
-3. Try disabling and re-enabling the extension
-4. Check the Chrome Developer Tools console for errors
+### Getting Help
+- **Issues**: Report bugs or request features via GitHub Issues
+- **Documentation**: Refer to this README for comprehensive guidance
+- **Community**: Join security research communities for general discussion
 
-## 🔮 Roadmap
-
-- [ ] Support for additional platforms (Synack, Cobalt, etc.)
-- [ ] Export/import functionality for manual programs
-- [ ] Program statistics and tracking
-- [ ] Dark mode support
-- [ ] Advanced filtering and search
+### Feedback
+We love hearing from users! Please share:
+- **Success Stories**: Programs you discovered using Bounty Watch
+- **Feature Requests**: What would make the extension more useful?
+- **Bug Reports**: Any issues you encounter while using the extension
 
 ---
 
-**Find. Report. Reward.** 🛡️
 
-Built with ❤️ for the security research community.
+<strong>Find. Report. Reward.</strong> 🛡️<br>
+Built with ❤️ for the security research community
+</div>
