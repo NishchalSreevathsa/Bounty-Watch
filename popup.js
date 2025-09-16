@@ -1,14 +1,11 @@
-// popup.js - Enhanced with suggestions and API features
+// popup.js - Simplified version with auto-check only
 
 let currentDomain = '';
 
 // Initialize popup
 document.addEventListener('DOMContentLoaded', () => {
     getCurrentDomain();
-    runInitialCheck();
-    
-    // Add event listener for manual check button
-    document.getElementById('checkBtn').addEventListener('click', handleManualCheck);
+    runAutoCheck();
 });
 
 // Get current domain and display it
@@ -25,34 +22,14 @@ async function getCurrentDomain() {
     }
 }
 
-// Run initial check when popup opens
-function runInitialCheck() {
+// Run automatic check when popup opens
+function runAutoCheck() {
     updateUI('loading', 'Checking for bug bounty programs...', '');
     
     chrome.runtime.sendMessage({ action: 'runLookup' }, (response) => {
         if (chrome.runtime.lastError) {
-            updateUI('error', 'Error connecting to extension', 'Please try again');
-            return;
-        }
-        
-        handleLookupResponse(response);
-    });
-}
-
-// Handle manual check button click
-function handleManualCheck() {
-    const button = document.getElementById('checkBtn');
-    button.disabled = true;
-    
-    updateUI('loading', 'Checking for bug bounty programs...', '');
-    hideResults();
-    hideSuggestions();
-    
-    chrome.runtime.sendMessage({ action: 'runLookup' }, (response) => {
-        button.disabled = false;
-        
-        if (chrome.runtime.lastError) {
-            updateUI('error', 'Error connecting to extension', 'Please try again');
+            updateUI('error', 'Error connecting to extension', 'Please try refreshing the page');
+            showSuggestions();
             return;
         }
         
@@ -73,9 +50,6 @@ function handleLookupResponse(response) {
         updateUI('success', 'Bug bounty programs found!', `Found ${response.data.programs.length} program(s) for ${currentDomain}`);
         displayResults(response.data.programs);
         hideSuggestions();
-        
-        // Check if we have API keys and can fetch trending programs
-        checkForTrendingPrograms();
     } else {
         // No programs found
         updateUI('error', 'No bug bounty program found', `${currentDomain} doesn't appear to have a public bug bounty program`);
@@ -190,7 +164,7 @@ function showSuggestions() {
             </div>
         `;
         
-        // Insert after results section or at the end of content
+        // Insert at the end of content
         const content = document.querySelector('.content');
         content.appendChild(suggestionsSection);
     }
@@ -209,52 +183,6 @@ function hideSuggestions() {
 // Hide results section
 function hideResults() {
     document.getElementById('results').style.display = 'none';
-}
-
-// Check for trending programs (API feature)
-async function checkForTrendingPrograms() {
-    try {
-        // Check if we have API keys
-        chrome.storage.sync.get(['h1', 'bc'], (result) => {
-            if (result.h1 || result.bc) {
-                // We have API keys, could add trending programs section
-                addTrendingProgramsSection();
-            }
-        });
-    } catch (error) {
-        console.error('Error checking for API keys:', error);
-    }
-}
-
-// Add trending programs section (future feature)
-function addTrendingProgramsSection() {
-    let trendingSection = document.getElementById('trending-programs');
-    
-    if (!trendingSection) {
-        trendingSection = document.createElement('div');
-        trendingSection.id = 'trending-programs';
-        trendingSection.className = 'suggestions-section';
-        trendingSection.innerHTML = `
-            <div class="suggestions-header">
-                <h3>🔥 Trending Programs</h3>
-                <div class="suggestions-subtitle">Popular bug bounty programs right now</div>
-            </div>
-            <div class="suggestion-list">
-                <div class="suggestion-item" style="opacity: 0.7;">
-                    <div class="suggestion-icon">🚀</div>
-                    <div class="suggestion-content">
-                        <div class="suggestion-title">API Integration Coming Soon</div>
-                        <div class="suggestion-desc">Live trending programs from HackerOne & Bugcrowd</div>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        const content = document.querySelector('.content');
-        content.appendChild(trendingSection);
-    }
-    
-    trendingSection.style.display = 'block';
 }
 
 // Utility function to escape HTML
