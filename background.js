@@ -1,11 +1,8 @@
 // background.js
 // Service worker / background script for Bounty Watch
-// Fixed badge update logic and enhanced functionality
+// Simplified version without API complexity
 
 'use strict';
-
-// In-memory cache for decrypted API keys
-let apiKeys = {};
 
 // Cache for domain results to avoid repeated checks
 let domainCache = new Map();
@@ -63,7 +60,7 @@ async function checkDomainAndUpdateBadge(domain, tabId) {
     domainCache.set(domain, { found: result.found, timestamp: Date.now() });
     setTimeout(() => domainCache.delete(domain), 10 * 60 * 1000);
     
-    // Update badge - FIXED: Check if programs were actually found
+    // Update badge - Check if programs were actually found
     const hasPrograms = result.data && result.data.found && result.data.programs && result.data.programs.length > 0;
     updateBadge(hasPrograms, tabId);
     
@@ -74,7 +71,7 @@ async function checkDomainAndUpdateBadge(domain, tabId) {
   }
 }
 
-// Update extension badge - FIXED LOGIC
+// Update extension badge
 function updateBadge(found, tabId) {
   if (found) {
     // Green checkmark for found programs
@@ -95,7 +92,7 @@ function updateBadge(found, tabId) {
   }
 }
 
-// Listen for messages from popup.js and settings.js
+// Listen for messages from popup.js
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   // Run lookup requested by popup
   if (msg && msg.action === 'runLookup') {
@@ -103,20 +100,6 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       .then(res => sendResponse(res))
       .catch(err => sendResponse({ error: err.message }));
     return true; // Keep channel open for async response
-  }
-
-  // Settings page sent decrypted keys for the session
-  if (msg && msg.action === 'unlockKeys') {
-    apiKeys = msg.keys || {};
-    sendResponse({ ok: true, message: 'API keys stored in memory for session.' });
-    return true;
-  }
-
-  // Clear in-memory keys on explicit lock
-  if (msg && msg.action === 'lockKeys') {
-    apiKeys = {};
-    sendResponse({ ok: true, message: 'API keys cleared from memory.' });
-    return true;
   }
 
   return false;
@@ -132,44 +115,24 @@ async function runLookupForActiveTab() {
   }
 }
 
-// Perform the actual lookup logic - FIXED RETURN FORMAT
+// Perform the actual lookup logic
 async function performLookup(domain) {
   try {
-    // Try authoritative platform APIs first when keys are available
-    const apiResults = [];
-    if (apiKeys && apiKeys.hackerone) {
-      const h = await tryHackerOneApi(domain);
-      if (h) apiResults.push(h);
-    }
-    if (apiKeys && apiKeys.bugcrowd) {
-      const b = await tryBugcrowdApi(domain);
-      if (b) apiResults.push(b);
-    }
-
-    // If any API results found, return them
-    if (apiResults.length) {
-      return { 
-        message: `Programs found for ${domain} (via platform APIs)`, 
-        data: { found: true, programs: apiResults },
-        found: true  // ADDED: Direct found flag for badge logic
-      };
-    }
-
-    // Fallback: run heuristics + manual programs
+    // Run heuristics + manual programs
     const programs = await lookupBountyPrograms(domain);
 
     if (!programs || programs.length === 0) {
       return { 
         message: `No program found for ${domain}`, 
         data: { found: false },
-        found: false  // ADDED: Direct found flag for badge logic
+        found: false
       };
     }
 
     return {
       message: `Programs found for ${domain}`,
       data: { found: true, programs },
-      found: true  // ADDED: Direct found flag for badge logic
+      found: true
     };
 
   } catch (err) {
@@ -209,76 +172,6 @@ async function lookupBountyPrograms(domain) {
   }
 
   return dedupePrograms(results);
-}
-
-// Try HackerOne API (best-effort)
-async function tryHackerOneApi(domain) {
-  try {
-    const endpoint = `https://api.hackerone.com/v1/organizations?search=${encodeURIComponent(domain)}`;
-    const resp = await fetch(endpoint, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${apiKeys.hackerone}`
-      },
-      mode: 'cors'
-    });
-    if (!resp || !resp.ok) return null;
-    
-    const json = await resp.json();
-    const programs = [];
-    if (Array.isArray(json.data)) {
-      for (const row of json.data.slice(0, 5)) {
-        const link = row.relationships && row.relationships.programs && row.relationships.programs.links && row.relationships.programs.links.related ? 
-          row.relationships.programs.links.related : 
-          `https://hackerone.com/${row.attributes && row.attributes.handle ? row.attributes.handle : ''}`;
-        programs.push({ 
-          platform: 'HackerOne', 
-          link, 
-          scope: domain, 
-          description: row.attributes && row.attributes.summary ? row.attributes.summary : '', 
-          rewards: '' 
-        });
-      }
-    }
-    return programs.length ? programs[0] : null;
-  } catch (e) {
-    return null;
-  }
-}
-
-// Try Bugcrowd API (best-effort)
-async function tryBugcrowdApi(domain) {
-  try {
-    const endpoint = `https://api.bugcrowd.com/api/programs?query=${encodeURIComponent(domain)}`;
-    const resp = await fetch(endpoint, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${apiKeys.bugcrowd}`
-      },
-      mode: 'cors'
-    });
-    if (!resp || !resp.ok) return null;
-    
-    const json = await resp.json();
-    if (json && Array.isArray(json.data) && json.data.length) {
-      const p = json.data[0];
-      const link = p && p.attributes && p.attributes.url ? 
-        p.attributes.url : 
-        `https://bugcrowd.com/${p && p.attributes && p.attributes.handle ? p.attributes.handle : ''}`;
-      return { 
-        platform: 'Bugcrowd', 
-        link, 
-        scope: domain, 
-        description: p.attributes && p.attributes.description ? p.attributes.description : '', 
-        rewards: '' 
-      };
-    }
-    return null;
-  } catch (e) {
-    return null;
-  }
 }
 
 // Fetch security.txt
@@ -362,7 +255,7 @@ async function probeKnownPlatformPaths(domain) {
   return results;
 }
 
-// Load user-defined manual programs from chrome.storage
+// Load user-defined manual programs from chrome.storage (keeping for future use)
 async function getManualPrograms(domain) {
   return new Promise(resolve => {
     chrome.storage.sync.get(['manualPrograms'], result => {
